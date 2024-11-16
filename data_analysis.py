@@ -3,7 +3,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def create_period(df: pd.DataFrame, start_date: str, end_date: str):
-    """Функция для построения графика изменения курса за весь период."""
+    
+    """Функция для построения графика изменения курса за весь период.
+    Args:
+        df: DataFrame, содержащий столбцы 'date' и 'value'.
+        start_date: Начальная дата для графика.
+        end_date: Конечная дата для графика.
+    """
+    # Формируем заголовок с учетом выбранного периода
     plt.figure(figsize=(12, 7))
     plt.plot(df['date'], df['value'], marker='o', linestyle='-', color='#1f77b4', label='Курс', markersize=6)
     title = f'Изменение курса за период с {start_date} по {end_date}' if start_date and end_date else 'Изменение курса за весь период'
@@ -18,5 +25,6 @@ def create_period(df: pd.DataFrame, start_date: str, end_date: str):
 
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.legend(loc='upper left', fontsize=12)
+    
     plt.tight_layout()
     plt.show(block=True)
