@@ -84,3 +84,23 @@ def filter_by_deviation(df: pd.DataFrame, threshold: float):
         raise ValueError("DataFrame должен содержать столбец 'deviation_from_mean'.")
     filtered_df = df[df['deviation_from_mean'] >= threshold]
     return filtered_df
+
+def filter_date(df: pd.DataFrame, start_date: str, end_date: str):
+    """Функция для фильтрации DataFrame по диапазону дат.
+    Args:
+        df: DataFrame
+        start_date: Начальная дата в формате 'YYYY-MM-DD'.
+        end_date: Конечная дата в формате 'YYYY-MM-DD'.
+    Returns:
+        Отфильтрованный DataFrame.
+    """
+    df = df.copy()  # Создаем копию DataFrame
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+
+    # Если даты не указаны, возвращаем все данные
+    if not start_date and not end_date:
+        return df
+
+    # Фильтрация строк, где дата находится в заданном диапазоне
+    filtered_df = df[(df['date'] >= start_date) & (df['date'] <= end_date)].copy()
+    return filtered_df
