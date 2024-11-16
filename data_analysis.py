@@ -60,3 +60,14 @@ def create_month(df: pd.DataFrame, month: str):
 
     plt.tight_layout()
     plt.show(block=True)
+
+def calculate_month(df: pd.DataFrame):
+    """Функция для вычисления среднего значения курса за месяц.
+    Args:
+        df: DataFrame, содержащий столбцы 'date' и 'value'.
+    Returns:
+        DataFrame, сгруппированный по месяцу, с рассчитанным средним значением курса.
+    """
+    df['month'] = df['date'].dt.to_period('M')
+    monthly_mean = df.groupby('month')['value'].mean().reset_index()
+    return monthly_mean
