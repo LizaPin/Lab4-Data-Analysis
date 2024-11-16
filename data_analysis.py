@@ -71,3 +71,16 @@ def calculate_month(df: pd.DataFrame):
     df['month'] = df['date'].dt.to_period('M')
     monthly_mean = df.groupby('month')['value'].mean().reset_index()
     return monthly_mean
+
+def filter_by_deviation(df: pd.DataFrame, threshold: float):
+    """Функция для фильтрации DataFrame по отклонению от среднего значения курса.
+    Args:
+        df: DataFrame
+        threshold: Значение отклонения от среднего значения
+    Returns:
+        Отфильтрованный DataFrame.
+    """
+    if 'deviation_from_mean' not in df.columns:
+        raise ValueError("DataFrame должен содержать столбец 'deviation_from_mean'.")
+    filtered_df = df[df['deviation_from_mean'] >= threshold]
+    return filtered_df
