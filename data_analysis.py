@@ -104,3 +104,78 @@ def filter_date(df: pd.DataFrame, start_date: str, end_date: str):
     # Фильтрация строк, где дата находится в заданном диапазоне
     filtered_df = df[(df['date'] >= start_date) & (df['date'] <= end_date)].copy()
     return filtered_df
+
+def main():
+    print("Введите путь до файла (./dataset.csv): ", end="")
+    filename = input().strip()
+    if not filename:
+        filename = "./dataset.csv"
+    
+    # Проверяем, существует ли указанный файл
+    if not os.path.exists(filename):
+        print(f"Ошибка: Файл '{filename}' не найден.")
+        return
+    
+    print("Введите значение отклонения (5.0): ", end="")
+    threshold = input()
+    if threshold.strip() == "":
+        threshold = 5.0
+    else:
+        try:
+            threshold = float(threshold.strip())
+        except ValueError:
+            print("Введено не число")
+            return
+
+    # Обязательный ввод месяца
+    month = ""
+    while not month.strip():
+        print("Введите месяц (YYYY-MM): ", end="")
+        month = input()
+        if not month.strip():
+            print("Месяц обязателен для ввода.")
+
+    print("Введите начальную дату (YYYY-MM-DD, по умолчанию берется весь период): ", end="")
+    start_date = input()
+    if start_date.strip() == "":
+        start_date = None  # Если дата не указана, то берем все данные
+
+    print("Введите конечную дату (YYYY-MM-DD, по умолчанию берется весь период): ", end="")
+    end_date = input()
+    if end_date.strip() == "":
+        end_date = None  # Если дата не указана, то берем все данные
+    
+    df = pd.read_csv(filename, sep=";")
+    df.columns = ["date", "value"]
+    df.dropna(subset=["date"], inplace=True)
+    df['date'] = pd.to_datetime(df['date'])
+    df.fillna({"value": df["value"].mean()}, inplace=True)
+
+    # Проверка данных
+    print(df.head())  # Вывести несколько строк для проверки данных
+
+    median_value = df['value'].median()
+    mean_value = df['value'].mean()
+
+    df['deviation_from_median'] = df['value'] - median_value
+    df['deviation_from_mean'] = df['value'] - mean_value
+
+    stats = df[['value', 'deviation_from_median', 'deviation_from_mean']].describe()
+    print(df)
+    print(stats)
+    print(filter_by_deviation(df=df, threshold=threshold))
+    
+    # Если пользователь не ввел начальную и конечную дату, фильтруем все данные
+    filtered_df = filter_date(df=df, start_date=start_date, end_date=end_date)
+    
+    if filtered_df.empty:
+        print("Нет данных для отображения в выбранном диапазоне дат.")
+        return
+
+    print(filtered_df)
+    print(calculate_month(df=df))
+    create_period(df=filtered_df, start_date=start_date, end_date=end_date)
+    create_month(df=filtered_df, month=month)
+
+if __name__ == '__main__':
+    main()
