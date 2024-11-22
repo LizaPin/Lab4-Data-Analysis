@@ -116,66 +116,76 @@ def main():
         print(f"Ошибка: Файл '{filename}' не найден.")
         return
     
-    print("Введите значение отклонения (5.0): ", end="")
-    threshold = input()
-    if threshold.strip() == "":
-        threshold = 5.0
-    else:
-        try:
-            threshold = float(threshold.strip())
-        except ValueError:
-            print("Введено не число")
-            return
-
-    # Обязательный ввод месяца
-    month = ""
-    while not month.strip():
-        print("Введите месяц (YYYY-MM): ", end="")
-        month = input()
-        if not month.strip():
-            print("Месяц обязателен для ввода.")
-
-    print("Введите начальную дату (YYYY-MM-DD, по умолчанию берется весь период): ", end="")
-    start_date = input()
-    if start_date.strip() == "":
-        start_date = None  # Если дата не указана, то берем все данные
-
-    print("Введите конечную дату (YYYY-MM-DD, по умолчанию берется весь период): ", end="")
-    end_date = input()
-    if end_date.strip() == "":
-        end_date = None  # Если дата не указана, то берем все данные
-    
+    # Загружаем данные
     df = pd.read_csv(filename, sep=";")
     df.columns = ["date", "value"]
     df.dropna(subset=["date"], inplace=True)
     df['date'] = pd.to_datetime(df['date'])
     df.fillna({"value": df["value"].mean()}, inplace=True)
 
-    # Проверка данных
-    print(df.head())  # Вывести несколько строк для проверки данных
-
+    # Подсчет отклонений
     median_value = df['value'].median()
     mean_value = df['value'].mean()
-
     df['deviation_from_median'] = df['value'] - median_value
     df['deviation_from_mean'] = df['value'] - mean_value
 
-    stats = df[['value', 'deviation_from_median', 'deviation_from_mean']].describe()
-    print(df)
-    print(stats)
-    print(filter_by_deviation(df=df, threshold=threshold))
-    
-    # Если пользователь не ввел начальную и конечную дату, фильтруем все данные
-    filtered_df = filter_date(df=df, start_date=start_date, end_date=end_date)
-    
-    if filtered_df.empty:
-        print("Нет данных для отображения в выбранном диапазоне дат.")
-        return
+    while True:
+        print("\nВыберите действие:")
+        print("1 - Построить график за указанный период")
+        print("2 - Построить график за указанный месяц")
+        print("3 - Вычислить средние значения по месяцам")
+        print("4 - Фильтровать данные по отклонению от среднего")
+        print("5 - Выйти из программы")
+        choice = input("Ваш выбор: ").strip()
 
-    print(filtered_df)
-    print(calculate_month(df=df))
-    create_period(df=filtered_df, start_date=start_date, end_date=end_date)
-    create_month(df=filtered_df, month=month)
+        if choice == "1":
+            # Ввод периода
+            print("Введите начальную дату (YYYY-MM-DD, по умолчанию весь период): ", end="")
+            start_date = input().strip()
+            print("Введите конечную дату (YYYY-MM-DD, по умолчанию весь период): ", end="")
+            end_date = input().strip()
+            start_date = start_date if start_date else None
+            end_date = end_date if end_date else None
+            filtered_df = filter_date(df, start_date, end_date)
+            if filtered_df.empty:
+                print("Нет данных для отображения в выбранном диапазоне дат.")
+            else:
+                create_period(filtered_df, start_date, end_date)
+
+        elif choice == "2":
+            # Ввод месяца
+            month = input("Введите месяц (YYYY-MM в формате): ").strip()
+            if not month:
+                print("Месяц обязателен для ввода.")
+                continue
+            create_month(df, month)
+
+        elif choice == "3":
+            # Вывод средней информации по месяцам
+            monthly_data = calculate_month(df)
+            print(monthly_data)
+
+        elif choice == "4":
+        # Фильтрация по отклонению
+            try:
+                threshold_input = input("Введите порог отклонения (например, 5.0): ").strip()
+                threshold = float(threshold_input) if threshold_input else 5.0  # По умолчанию 5.0
+            except ValueError:
+                print("Ошибка: необходимо ввести число.")
+                continue
+
+            filtered_df = filter_by_deviation(df, threshold)
+            if filtered_df.empty:
+                print("Нет данных с таким отклонением.")
+            else:
+                print(filtered_df)
+
+        elif choice == "5":
+            print("Выход из программы.")
+            break
+
+        else:
+            print("Неверный выбор. Попробуйте снова.")
 
 if __name__ == '__main__':
     main()
